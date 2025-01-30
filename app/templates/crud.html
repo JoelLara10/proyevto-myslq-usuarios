@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD - Personas</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f4f4f4;
+    }
+
+    form {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CRUD de Personas</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Edad</th>
+        <th>Email</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="person-table-body">
+      <!-- Aquí se insertarán las filas dinámicamente -->
+    </tbody>
+  </table>
+
+  <form id="add-person-form">
+    <h2>Registrar Persona</h2>
+    <label>
+      Nombre:
+      <input type="text" name="name" required>
+    </label>
+    <br>
+    <label>
+      Edad:
+      <input type="number" name="age" required>
+    </label>
+    <br>
+    <label>
+      Email:
+      <input type="email" name="email" required>
+    </label>
+    <br>
+    <button type="submit">Agregar Persona</button>
+  </form>
+
+  <form id="edit-person-form" style="display: none;">
+    <h2>Editar Persona</h2>
+    <input type="hidden" id="edit-id">
+    <label>
+      Nombre:
+      <input type="text" id="edit-name" required>
+    </label>
+    <br>
+    <label>
+      Edad:
+      <input type="number" id="edit-age" required>
+    </label>
+    <br>
+    <label>
+      Email:
+      <input type="email" id="edit-email" required>
+    </label>
+    <br>
+    <button type="submit">Guardar Cambios</button>
+    <button type="button" onclick="cancelEdit()">Cancelar</button>
+  </form>
+
+
+  <script>
+    const API_URL = '/persons';
+
+    // Función para cargar los datos en la tabla
+    async function loadPersons() {
+      const response = await fetch( API_URL );
+      const persons = await response.json();
+
+      const tableBody = document.getElementById( 'person-table-body' );
+      tableBody.innerHTML = ''; // Limpiar la tabla
+
+      persons.forEach( person => {
+        const row = document.createElement( 'tr' );
+        row.innerHTML = `
+                    <td>${ person.id }</td>
+                    <td>${ person.name }</td>
+                    <td>${ person.age }</td>
+                    <td>${ person.email }</td>
+                    <td>
+                        <button onclick="editPerson(${ person.id }, '${ person.name }', ${ person.age }, '${ person.email }')">Editar</button>
+                        <button onclick="deletePerson(${ person.id })">Eliminar</button>
+                    </td>
+
+                `;
+        tableBody.appendChild( row );
+      } );
+    }
+
+    // Función para abrir el formulario de edición
+    function editPerson( id, name, age, email ) {
+      document.getElementById( 'edit-id' ).value = id;
+      document.getElementById( 'edit-name' ).value = name;
+      document.getElementById( 'edit-age' ).value = age;
+      document.getElementById( 'edit-email' ).value = email;
+
+      document.getElementById( 'edit-person-form' ).style.display = 'block';
+    }
+
+    // Función para actualizar una persona
+    document.getElementById( 'edit-person-form' ).addEventListener( 'submit', async ( event ) => {
+      event.preventDefault();
+      const id = document.getElementById( 'edit-id' ).value;
+      const name = document.getElementById( 'edit-name' ).value;
+      const age = document.getElementById( 'edit-age' ).value;
+      const email = document.getElementById( 'edit-email' ).value;
+
+      const response = await fetch( `${ API_URL }/${ id }`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify( { name, age, email } )
+      } );
+
+      if ( response.ok ) {
+        alert( 'Persona actualizada exitosamente' );
+        loadPersons();
+        cancelEdit();
+      } else {
+        alert( 'Error al actualizar la persona' );
+      }
+    } );
+
+    // Función para cancelar edición
+    function cancelEdit() {
+      document.getElementById( 'edit-person-form' ).style.display = 'none';
+    }
+
+
+    // Función para agregar una nueva persona
+    document.getElementById( 'add-person-form' ).addEventListener( 'submit', async ( event ) => {
+      event.preventDefault();
+      const formData = new FormData( event.target );
+      const data = Object.fromEntries( formData );
+
+      const response = await fetch( `${ API_URL }/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify( data )
+      } );
+
+      if ( response.ok ) {
+        alert( 'Persona registrada exitosamente' );
+        loadPersons(); // Recargar la tabla
+        event.target.reset(); // Limpiar el formulario
+      } else {
+        alert( 'Error al registrar la persona' );
+      }
+    } );
+
+
+    // Función para eliminar una persona
+    async function deletePerson( id ) {
+      const response = await fetch( `${ API_URL }/${ id }`, { method: 'DELETE' } );
+
+      if ( response.ok ) {
+        alert( 'Persona eliminada exitosamente' );
+        loadPersons(); // Recargar la tabla
+      } else {
+        alert( 'Error al eliminar la persona' );
+      }
+    }
+
+
+
+    // Cargar las personas al iniciar la página
+    loadPersons();
+  </script>
+</body>
+
+</html>

@@ -4,8 +4,8 @@ from app.models.Person import Person
 app = create_app()
 
 with app.app_context():  # Asegúrate de que el contexto de la aplicación esté disponible.
-    if not Person.query.filter_by(email='joel020105@gmail.com').first():
-        default_person = Person(name='Joel', age=21, email='joel020105@gmail.com')
+    if not Person.query.filter_by(email='joeel12@gmail.com').first():
+        default_person = Person(name='Joeeel', age=21, email='joeel12@gmail.com')
         db.session.add(default_person)
         db.session.commit()
 

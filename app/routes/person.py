@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, render_template, request, jsonify
 from app.models.Person import Person
 from app.config import db
 
@@ -31,3 +31,41 @@ def register_person():
         return jsonify({'message': 'Persona registrada exitosamente.'}), 201
     except Exception as e:
         return jsonify({'error': f'Ocurrió un error: {str(e)}'}), 500
+
+@person_bp.route('/<int:id>', methods=['DELETE'])
+def delete_person(id):
+    try:
+        person = Person.query.get(id)
+        if not person:
+            return jsonify({'error': 'Persona no encontrada'}), 404
+        
+        db.session.delete(person)
+        db.session.commit()
+        return jsonify({'message': 'Persona eliminada exitosamente.'}), 200
+    except Exception as e:
+        return jsonify({'error': f'Ocurrió un error: {str(e)}'}), 500
+    
+
+@person_bp.route('/<int:id>', methods=['PUT'])
+def update_person(id):
+    try:
+        person = Person.query.get(id)
+        if not person:
+            return jsonify({'error': 'Persona no encontrada'}), 404
+
+        data = request.get_json()
+        person.name = data.get('name', person.name)
+        person.age = data.get('age', person.age)
+        person.email = data.get('email', person.email)
+
+        db.session.commit()
+        return jsonify({'message': 'Persona actualizada exitosamente'}), 200
+    except Exception as e:
+        return jsonify({'error': f'Ocurrió un error: {str(e)}'}), 500
+
+
+
+
+@person_bp.route('/crud', methods=['GET'])
+def crud_page():
+    return render_template('crud.html')
